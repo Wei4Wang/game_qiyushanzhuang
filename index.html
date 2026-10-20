@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>泣雨山庄·白月光的葬礼 — 沉浸式剧本杀</title>
+<style>
+  :root{
+    --bg:#0a0a12; --bg2:#10101c; --panel:#151527; --panel2:#1c1c33; --line:#2a2a45;
+    --text:#e8e6f0; --muted:#8f8ba8; --blood:#c81e3c; --blood2:#8f1226;
+    --gold:#e8c36a; --moon:#cfe0ff; --violet:#7c5cff; --rose:#ff4d6d;
+    --green:#4dd08a; --blue:#3b82f6; --slate:#64748b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  .screen{display:none;min-height:100vh}
+  .screen.active{display:block}
+  button{font-family:inherit;cursor:pointer;border:none;outline:none}
+  .btn{background:linear-gradient(135deg,var(--blood),var(--blood2));color:#fff;padding:12px 26px;border-radius:8px;font-size:15px;letter-spacing:2px;transition:.2s;box-shadow:0 4px 18px rgba(200,30,60,.35)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(200,30,60,.5)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);box-shadow:none}
+  .btn.ghost:hover{color:var(--text);border-color:var(--gold)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  .btn.small{padding:8px 16px;font-size:13px}
+  .btn.gold{background:linear-gradient(135deg,#b8913a,#8a6d28);box-shadow:0 4px 18px rgba(232,195,106,.3)}
+  .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:10px;letter-spacing:1px}
+  .tag.L1{background:rgba(232,195,106,.15);color:var(--gold);border:1px solid rgba(232,195,106,.4)}
+  .tag.L2{background:rgba(124,92,255,.15);color:#a78bfa;border:1px solid rgba(124,92,255,.4)}
+  .tag.L3{background:rgba(200,30,60,.18);color:#ff7a93;border:1px solid rgba(200,30,60,.5)}
+
+  /* 开场 */
+  #opening{position:relative;background:radial-gradient(ellipse at 50% 30%,#1a1a33 0%,#0a0a12 70%)}
+  .rain{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .drop{position:absolute;top:-20px;width:1px;background:linear-gradient(transparent,rgba(180,190,230,.5));animation:fall linear infinite}
+  @keyframes fall{to{transform:translateY(110vh)}}
+  .fog{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 110%,rgba(60,70,120,.25),transparent 60%),radial-gradient(ellipse at 20% 100%,rgba(40,50,90,.2),transparent 55%)}
+  .opening-center{position:relative;z-index:3;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+  .opening-kicker{color:var(--muted);letter-spacing:8px;font-size:13px;opacity:0;animation:fadeup 1.4s .3s forwards}
+  .opening-title{font-size:clamp(38px,7vw,72px);letter-spacing:6px;font-weight:700;margin:18px 0 6px;color:#fff;text-shadow:0 0 30px rgba(207,224,255,.35);opacity:0;animation:fadeup 1.6s .7s forwards}
+  .opening-title .blood{color:var(--blood);text-shadow:0 0 34px rgba(200,30,60,.6)}
+  .opening-sub{font-size:15px;color:var(--muted);letter-spacing:4px;opacity:0;animation:fadeup 1.6s 1.1s forwards}
+  .opening-meta{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeup 1.4s 1.4s forwards}
+  .opening-meta span{border:1px solid var(--line);padding:7px 16px;border-radius:20px;font-size:13px;color:var(--muted)}
+  .opening-enter{margin-top:44px;opacity:0;animation:fadeup 1.4s 1.8s forwards}
+  .opening-enter .btn{font-size:17px;padding:14px 44px;letter-spacing:4px}
+  @keyframes fadeup{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+  /* 抽身份 */
+  #draw .wrap{max-width:560px;margin:0 auto;padding:50px 20px}
+  .draw-stage{text-align:center;padding:60px 20px}
+  .draw-card{width:180px;height:250px;margin:30px auto;background:var(--panel);border:2px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:60px;font-weight:700;color:var(--muted);transition:.4s;position:relative;overflow:hidden}
+  .draw-card.cycling{animation:shake .5s infinite}
+  @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+  .draw-card .mono{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:700;color:#fff}
+  .draw-hint{color:var(--muted);font-size:14px;letter-spacing:2px}
+  .script-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;display:none}
+  .script-panel .who-line{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .script-panel .who-line .mono{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff}
+  .script-panel h2{font-size:22px}
+  .script-panel .role{color:var(--muted);font-size:13px;margin-top:4px}
+  .script-panel h4{color:var(--gold);font-size:13px;letter-spacing:2px;margin:18px 0 8px}
+  .script-panel p{font-size:14px;line-height:1.9;color:var(--text)}
+  .script-panel .warn{color:#ff7a93}
+  .script-panel .secret-box{background:rgba(200,30,60,.06);border:1px dashed rgba(200,30,60,.35);border-radius:10px;padding:14px;margin-top:6px}
+
+  /* 顶部栏 */
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(10,10,18,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:12px 20px;flex-wrap:wrap}
+  .topbar .logo{font-size:15px;font-weight:700;letter-spacing:2px;color:#fff;white-space:nowrap}
+  .topbar .logo small{color:var(--blood);margin-left:6px}
+  .me-pill{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:5px 12px;border-radius:16px;font-size:13px;color:var(--muted);white-space:nowrap}
+  .me-pill .mono{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+  .me-pill b{color:#fff}
+  .timer-wrap{display:flex;align-items:center;gap:9px;margin-left:auto}
+  .timer{font-size:24px;font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums;color:var(--gold)}
+  .timer.danger{color:var(--blood);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  .round-pill{background:var(--panel2);border:1px solid var(--line);padding:5px 14px;border-radius:16px;font-size:13px;color:var(--muted)}
+  .round-pill b{color:var(--gold)}
+
+  .nav{display:flex;gap:4px;padding:12px 20px 0;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--bg)}
+  .nav button{background:transparent;color:var(--muted);padding:10px 16px;font-size:14px;letter-spacing:2px;border-bottom:2px solid transparent}
+  .nav button.active{color:#fff;border-bottom-color:var(--blood)}
+  .nav button:hover{color:var(--text)}
+
+  .main{max-width:1120px;margin:0 auto;padding:24px 20px 80px}
+  .section-title{font-size:21px;font-weight:700;letter-spacing:3px;margin-bottom:6px}
+  .section-title .num{color:var(--blood)}
+  .section-sub{color:var(--muted);font-size:13px;margin-bottom:20px;letter-spacing:1px}
+  .dm-note{background:linear-gradient(135deg,rgba(200,30,60,.08),rgba(124,92,255,.06));border:1px solid rgba(200,30,60,.25);border-left:3px solid var(--blood);padding:12px 16px;border-radius:8px;color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.7}
+  .dm-note b{color:var(--gold)}
+
+  /* 人物 */
+  .chars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .char-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.25s;position:relative}
+  .char-card.self{border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+  .char-card .head{height:92px;background:linear-gradient(135deg,var(--c),transparent);display:flex;align-items:center;gap:14px;padding:0 18px}
+  .char-card .mono{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.35);border:2px solid var(--c);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0}
+  .char-card .who{flex:1}
+  .char-card .who .nm{font-size:18px;font-weight:700;color:#fff}
+  .char-card .who .role{font-size:12px;color:var(--muted);margin-top:3px}
+  .char-card .gender{font-size:11px;color:var(--c);border:1px solid var(--c);padding:2px 8px;border-radius:10px}
+  .char-card .body{padding:14px 18px;font-size:13px;color:var(--muted);line-height:1.7;min-height:70px}
+  .char-card .body .claim{color:var(--text)}
+  .char-card .foot{padding:10px 18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  .char-card .foot .secret-hint{color:var(--blood)}
+
+  /* 搜证 */
+  .search-status{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+  .search-status .stat{background:var(--panel2);border:1px solid var(--line);padding:10px 18px;border-radius:10px;font-size:14px}
+  .search-status .stat b{color:var(--gold);font-size:20px;margin:0 4px}
+  .scenes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .scene-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .scene-card .sh{padding:13px 15px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--line)}
+  .scene-card .sh .idx{width:32px;height:32px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold)}
+  .scene-card .sh .nm{font-weight:600;font-size:14px}
+  .scene-card .sh .st{font-size:11px;color:var(--muted);margin-top:2px}
+  .scene-card .clues{padding:8px 14px}
+  .clue{font-size:13px;line-height:1.7;padding:9px 0;border-bottom:1px dashed var(--line);color:var(--muted)}
+  .clue:last-child{border-bottom:none}
+  .clue.revealed{color:var(--text)}
+  .clue.locked{display:flex;align-items:center;gap:8px}
+  .scene-card .foot{padding:11px 14px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+  .clue-library{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .clue-library h3{font-size:16px;letter-spacing:2px;margin-bottom:12px;color:var(--gold)}
+  .clue-library .empty{color:var(--muted);font-size:14px}
+
+  /* 审讯 */
+  .interro-layout{display:grid;grid-template-columns:210px 1fr;gap:16px}
+  @media(max-width:760px){.interro-layout{grid-template-columns:1fr}}
+  .npc-list{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;height:fit-content}
+  .npc-list button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;color:var(--muted);padding:9px 10px;border-radius:8px;font-size:14px;margin-bottom:4px}
+  .npc-list button.active{background:var(--panel2);color:#fff}
+  .npc-list button:hover{color:var(--text)}
+  .npc-list button .mono{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+  .npc-list button .done{color:var(--green);margin-left:auto;font-size:11px}
+  .interro-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;min-height:380px}
+  .interro-panel h3{font-size:17px;margin-bottom:4px}
+  .interro-panel .sub{color:var(--muted);font-size:12px;margin-bottom:16px}
+  .topic-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .topic-btn{font-size:13px;padding:9px 15px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);color:var(--text)}
+  .topic-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .topic-btn.asked{opacity:.5}
+  .say-box{background:var(--panel2);border-left:3px solid var(--gold);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+  .say-box .spk{font-size:12px;color:var(--gold);margin-bottom:6px}
+  .say-box p{font-size:14px;line-height:1.8;color:var(--text)}
+  .say-box.truth{border-left-color:var(--green)}
+  .say-box.truth .spk{color:var(--green)}
+  .confront{background:rgba(200,30,60,.08);border:1px dashed rgba(200,30,60,.5);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+  .confront p{font-size:13px;color:var(--muted);margin-bottom:10px}
+  .confront .truth-reveal{font-size:14px;line-height:1.8;color:#ff7a93;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .truth-frag{background:rgba(77,208,138,.07);border:1px solid rgba(77,208,138,.3);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;color:var(--green);margin-top:8px}
+  .log-panel{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .log-panel h3{font-size:15px;color:var(--gold);letter-spacing:2px;margin-bottom:10px}
+
+  /* 时间线 */
+  .timeline{position:relative;padding-left:28px}
+  .timeline::before{content:"";position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--line)}
+  .tl-item{position:relative;margin-bottom:18px}
+  .tl-item::before{content:"";position:absolute;left:-26px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--blood);border:2px solid var(--bg)}
+  .tl-item.hide::before{background:var(--slate)}
+  .tl-item .tt{font-weight:700;color:var(--gold);font-size:14px;letter-spacing:1px}
+  .tl-item .ev{color:var(--text);font-size:14px;margin-top:3px;line-height:1.7}
+  .tl-item .ev .blur{filter:blur(5px);opacity:.7;user-select:none}
+  .tl-item .ev .unlocked{color:var(--blood)}
+  .tl-note{color:var(--muted);font-size:13px;margin-bottom:16px}
+
+  /* 投票 */
+  .vote-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .vote-opt{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;transition:.2s;font-size:14px;color:var(--muted)}
+  .vote-opt:hover{border-color:var(--gold);color:var(--text)}
+  .vote-opt.selected{border-color:var(--blood);background:var(--blood2);color:#fff}
+  .vote-opt .mono-sm{width:40px;height:40px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#fff;border:2px solid currentColor}
+  .vote-opt small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .vote-submit{margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .redeem-box{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .redeem-box label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px;cursor:pointer}
+  .redeem-box input{width:16px;height:16px;accent-color:var(--blood)}
+  .redeem-box.disabled{opacity:.45}
+
+  /* 结局 */
+  .endings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px}
+  .ending{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;overflow:hidden}
+  .ending .badge{position:absolute;top:14px;right:14px;font-size:11px;padding:3px 10px;border-radius:10px;letter-spacing:1px}
+  .ending .e-title{font-size:19px;font-weight:700;margin-bottom:6px}
+  .ending .e-type{font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:14px}
+  .ending .e-text{font-size:13px;line-height:1.8;color:var(--muted)}
+  .ending .e-trigger{margin-top:14px;font-size:12px;color:var(--gold);line-height:1.7;border-top:1px dashed var(--line);padding-top:12px}
+  .ending.unlocked{border-color:var(--blood);box-shadow:0 0 30px rgba(200,30,60,.3)}
+  .ending.unlocked::after{content:"本局结局";position:absolute;bottom:14px;right:14px;color:var(--blood);font-size:12px;letter-spacing:2px}
+  .ending .badge.BE{background:rgba(200,30,60,.2);color:#ff7a93}
+  .ending .badge.HE{background:rgba(77,208,138,.18);color:var(--green)}
+  .ending .badge.HIDE{background:rgba(232,195,106,.18);color:var(--gold)}
+  .ending .badge.ALL{background:rgba(124,92,255,.18);color:#a78bfa}
+  .recap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+  .recap h3{font-size:17px;color:var(--gold);letter-spacing:2px;margin-bottom:14px}
+  .recap .r-block{margin-bottom:14px}
+  .recap .r-block h4{color:var(--blood);font-size:14px;letter-spacing:1px;margin-bottom:6px}
+  .recap .r-block p{font-size:14px;line-height:1.8;color:var(--text)}
+
+  .footer{padding:28px;text-align:center;color:var(--muted);font-size:12px;letter-spacing:1px;border-top:1px solid var(--line)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.open{display:flex}
+  .modal-card{width:min(560px,94vw);max-height:86vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;position:relative}
+  .close-x{position:absolute;top:14px;right:16px;background:rgba(0,0,0,.4);color:#fff;width:32px;height:32px;border-radius:50%;font-size:15px}
+  .close-x:hover{background:var(--blood)}
+</style>
+</head>
+<body>
+
+<!-- ===== 开场 ===== -->
+<section class="screen active" id="opening">
+  <div class="rain" id="rain"></div>
+  <div class="fog"></div>
+  <div class="opening-center">
+    <div class="opening-kicker">一场关于爱与罪的暴风雨夜</div>
+    <div class="opening-title">泣雨山庄<span class="blood">·</span>白月光的葬礼</div>
+    <div class="opening-sub">本格爱情悬疑 · 沉浸式单人剧本杀 · 真相由你亲手揭开</div>
+    <div class="opening-meta">
+      <span>6 人 · 你随机扮演其一</span><span>60 分钟</span><span>进阶硬核</span><span>凶手从不发到你手里</span>
+    </div>
+    <div class="opening-enter"><button class="btn" onclick="startDraw()">抽取你的身份</button></div>
+  </div>
+</section>
+
+<!-- ===== 抽身份 ===== -->
+<section class="screen" id="draw">
+  <div class="wrap">
+    <div class="draw-stage" id="drawStage">
+      <div class="draw-hint" id="drawHint">正在洗牌，命运由抽签决定……</div>
+      <div class="draw-card" id="drawCard">?</div>
+      <div class="draw-hint" id="drawHint2" style="display:none">你抽到了这个身份——记住：凶手，永远不会是你。</div>
+    </div>
+    <div class="script-panel" id="scriptPanel"></div>
+  </div>
+</section>
+
+<!-- ===== 游戏 ===== -->
+<section class="screen" id="game">
+  <div class="topbar">
+    <div class="logo">泣雨山庄<small>沉浸版</small></div>
+    <div class="me-pill" id="mePill"></div>
+    <div class="round-pill">搜证：<b id="roundLabel">第一轮</b></div>
+    <div class="timer-wrap">
+      <button class="btn ghost small" id="btnTimer" onclick="toggleTimer()">开始计时</button>
+      <button class="btn ghost small" onclick="resetTimer()">重置</button>
+      <div class="timer" id="timer">60:00</div>
+    </div>
+  </div>
+  <div class="nav" id="nav">
+    <button class="active" data-tab="chars" onclick="switchTab('chars')">人物</button>
+    <button data-tab="search" onclick="switchTab('search')">搜证</button>
+    <button data-tab="interro" onclick="switchTab('interro')">审讯</button>
+    <button data-tab="timeline" onclick="switchTab('timeline')">时间线</button>
+    <button data-tab="vote" onclick="switchTab('vote')">投票</button>
+    <button data-tab="ending" onclick="switchTab('ending')">结局</button>
+  </div>
+  <div class="main">
+
+    <div class="tab-pane" id="tab-chars">
+      <div class="section-title"><span class="num">01</span> 大厅 · 自我介绍</div>
+      <div class="section-sub">六个被困在山庄里的人各自报上名号。只有你自己的秘密是摊开的，别人的底细，要靠你亲手去挖。</div>
+      <div class="dm-note"><b>阶段提示：</b>先熟悉每个人的公开身份与说辞，再去搜证和审讯。你的角色卡已高亮标注。</div>
+      <div class="chars-grid" id="charsGrid"></div>
+    </div>
+
+    <div class="tab-pane" id="tab-search" style="display:none">
+      <div class="section-title"><span class="num">02</span> 搜证现场</div>
+      <div class="section-sub">两轮搜证，每轮限搜 3 次。L1 公开、L2 搜证解锁、L3 深层线索仅第二轮开放。</div>
+      <div class="search-status">
+        <div class="stat">当前轮次：<b id="srRound">1</b></div>
+        <div class="stat">剩余搜证：<b id="srLeft">3</b> / 3</div>
+        <button class="btn ghost small" id="btnNextRound" onclick="nextRound()" disabled>进入第二轮</button>
+      </div>
+      <div class="scenes-grid" id="scenesGrid"></div>
+      <div class="clue-library">
+        <h3>我的线索库（已搜集 <span id="clueCount">0</span> 条）</h3>
+        <div id="clueLibrary"><div class="empty">尚未搜到任何线索。</div></div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-interro" style="display:none">
+      <div class="section-title"><span class="num">03</span> 审讯</div>
+      <div class="section-sub">逐个盘问。他们会撒谎——当你手握能戳穿谎言的关键线索时，「出示证据」会逼出真相。</div>
+      <div class="interro-layout">
+        <div class="npc-list" id="npcList"></div>
+        <div class="interro-panel" id="interroPanel"></div>
+      </div>
+      <div class="log-panel"><h3>证词与真相记录</h3><div id="logPanel"></div></div>
+    </div>
+
+    <div class="tab-pane" id="tab-timeline" style="display:none">
+      <div class="section-title"><span class="num">04</span> 案件时间线</div>
+      <div class="tl-note">公开的时间线已被暴雨冲刷得支离破碎；被隐藏的真相，只有当你戳穿「白蔷薇」的谎言后才会浮现。</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div class="tab-pane" id="tab-vote" style="display:none">
+      <div class="section-title"><span class="num">05</span> 最终投票</div>
+      <div class="section-sub">写下那个名字。你只有一次机会。</div>
+      <div class="vote-grid" id="voteGrid"></div>
+      <div class="redeem-box disabled" id="redeemBox">
+        <label><input type="checkbox" id="redeemChk" onchange="onRedeemToggle()"> 我选择感化凶手，寻求救赎（仅当你是晨晨、且集齐「第七封信」与「复仇笔记」时生效）</label>
+      </div>
+      <div class="vote-submit">
+        <button class="btn" onclick="submitVote()">确认投票</button>
+        <button class="btn ghost" onclick="clearVote()">清除</button>
+        <span id="voteHint" style="color:var(--muted);font-size:13px"></span>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-ending" style="display:none">
+      <div class="section-title"><span class="num">06</span> 结局</div>
+      <div class="section-sub">四种结局由你的投票与关键线索决定。</div>
+      <div class="dm-note" id="endingNote"><b>提示：</b>完成投票后再回来看结算。</div>
+      <div class="endings-grid" id="endingsGrid"></div>
+      <div class="recap" id="recapBox"></div>
+    </div>
+
+  </div>
+  <div class="footer">泣雨山庄·白月光的葬礼 — 沉浸式单人剧本杀 · 凶手从不发到你手里 · 真相由你亲手揭开</div>
+</section>
+
+<!-- 弹窗 -->
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card" id="modalCard">
+    <button class="close-x" onclick="closeModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ==================== 数据 ==================== */
+const ALL = [
+  {id:'weiwei', name:'伟伟', gender:'男', age:28, role:'剧本杀作者', c:'#7c5cff', canAssign:true,
+   selfIntro:'「我是伟伟，写剧本杀的。今晚这场……我就是来赴一个约。」',
+   public:'知名剧本杀作者，晨晨的男友，恩恩的发小，也是已故才女芯芯的初恋。',
+   secret:'三年前你纵火烧了芯芯的工作室，霸占她的作品《第七封信》并骗保。你不是今晚的凶手，但你的手沾满旧罪。',
+   motive:'苏念握有你纵火夺作、骗保的证据并勒索你，你想灭口。',
+   task:'掩盖三年前的旧案；把嫌疑引向恩恩（你知道她囚禁过你，可栽赃）；活到最后。',
+   tip:'你是渣男，但不是凶手。'},
+  {id:'enen', name:'恩恩', gender:'女', age:25, role:'伟伟发小 · 病娇', c:'#ff4d6d', canAssign:true,
+   selfIntro:'「我是恩恩，伟伟的……最好的朋友。我哪也不去，就守着他。」',
+   public:'伟伟的「好闺蜜」，占有欲极强，几乎寸步不离。',
+   secret:'你是病娇。三年前为独占伟伟，提供了纵火钥匙与助燃剂；此后又把伟伟囚禁在地下室。',
+   motive:'苏念要曝光你的囚禁行为，还要「夺走」伟伟。',
+   task:'保护伟伟；隐藏囚禁事实；找出真凶——你怀疑芯芯回来了。',
+   tip:'你爱他爱到想把他锁起来，但杀死苏念的不是你。'},
+  {id:'chenchen', name:'晨晨', gender:'女', age:26, role:'护士 · 唯一好人', c:'#e8c36a', canAssign:true,
+   selfIntro:'「我是晨晨，一名护士……我只想救所有人。」',
+   public:'伟伟的现任女友，温柔善良，今晚神情憔悴。',
+   secret:'你发现了伟伟脚踏多船、与恩恩关系异常；苏念曾求你作证救人。全场只有你是干净的。',
+   motive:'表面：你曾与苏念争吵。真实：你没有杀人动机。',
+   task:'找出真相；保护无辜者；揭发伟伟的罪行。你的选择决定「救赎」结局能否达成。',
+   tip:'你是唯一的好人。集齐「第七封信」+「复仇笔记」，可在投票前选择感化凶手。'},
+  {id:'xinxin', name:'白蔷薇', gender:'女', age:'?', role:'神秘女子', c:'#cfe0ff', canAssign:false, isMurderer:true,
+   selfIntro:'「我……姓白，受苏念之邀而来。请叫我白蔷薇。」（她的脸被面纱遮住，手戴手套）',
+   public:'戴面纱、戴手套的神秘女子，自称「白蔷薇」，受苏念邀请而来，身份成谜。',
+   secret:'你是芯芯——伟伟「已故」的白月光，苏念的亲妹妹。三年前你被伟伟纵火毁容、假死归来；今晚你亲手杀死了认出你的姐姐。',
+   motive:'苏念认出你还活着，要揭穿假死、带你自首，毁掉你三年的复仇计划。',
+   task:'【你是真凶】掩盖身份，嫁祸他人，完成复仇。',
+   tip:'你从不被发到玩家手里。'},
+  {id:'shenmo', name:'沈墨', gender:'男', age:35, role:'私家侦探', c:'#64748b', canAssign:true,
+   selfIntro:'「沈墨，私家侦探，受雇而来。我只对证据说话。」',
+   public:'受雇调查此案的私家侦探，寡言冷静，总在记录。',
+   secret:'你三年前是保险调查员，收钱把纵火鉴定成「意外」，帮伟伟骗保。苏念握有你的把柄。',
+   motive:'苏念掌握你伪证、骗保的证据，要举报你。',
+   task:'隐藏伪证史；找回苏念手中的证据并销毁。',
+   tip:'你不是凶手，但你的手一样不干净。'},
+  {id:'guzhao', name:'顾钊', gender:'男', age:31, role:'刑警 · 黑警', c:'#3b82f6', canAssign:true,
+   selfIntro:'「顾钊，市局刑警。命案现场由我封锁，请各位配合。」',
+   public:'办案刑警，主持现场封锁，神情威严。',
+   secret:'你三年前受贿压案，把芯芯的「死亡」草草定性为意外。你是黑警。',
+   motive:'苏念掌握你受贿渎职的证据，要翻案举报。',
+   task:'维护「刑警」人设；找证据销毁；必要时甩锅给沈墨。',
+   tip:'正义的外衣下，你早已背离了警徽。'}
+];
+
+const TOPICS = [
+  {id:'T1', q:'昨晚你的行踪'},
+  {id:'T2', q:'你与苏念的纠葛'},
+  {id:'T3', q:'三年前的旧案'},
+  {id:'T4', q:'白月光芯芯的下落'},
+  {id:'T5', q:'你怀疑谁是凶手'}
+];
+
+// 证词：say=说辞, lie=是否撒谎, exposeBy=可戳穿的线索id, truth=被戳穿后吐出的真相
+const TESTIMONY = {
+  weiwei:{
+    T1:{say:'昨晚我一直待在房间写稿，没出过门。', lie:false},
+    T2:{say:'苏念……她约我来，说手里有能毁了我的东西。', lie:false},
+    T3:{say:'三年前芯芯是意外死的，跟我没关系。', lie:true, exposeBy:'c_badge', truth:'……火是我放的。我烧了她的工作室，霸占了《第七封信》，还骗了保。'},
+    T4:{say:'芯芯三年前就死了，别再提她了。', lie:false},
+    T5:{say:'恩恩最可疑，她占有欲强得吓人，什么事都做得出来。', lie:false}
+  },
+  enen:{
+    T1:{say:'我昨晚睡得早，什么都没听见。', lie:false},
+    T2:{say:'我和伟伟只是朋友，我从没伤害过他。', lie:true, exposeBy:'c_photo2', truth:'……我把他锁在地下室过。我爱他，爱到想把他永远留在身边。'},
+    T3:{say:'三年前我只是个旁观者，什么都没做。', lie:true, exposeBy:'c_notes', truth:'我给伟伟提供了工作室的钥匙和助燃剂……为了让他只属于我。'},
+    T4:{say:'那个戴面纱的女人，我总觉得眼熟……像极了芯芯。', lie:false},
+    T5:{say:'谁想抢走伟伟，谁就是我的敌人。', lie:false}
+  },
+  chenchen:{
+    T1:{say:'昨晚我去找过苏念，在书房外聊了几句就回房了，发卡还不小心掉在那。', lie:false},
+    T2:{say:'苏念求我作证，救救她的妹妹。我……还没答应。', lie:false},
+    T3:{say:'三年前的事我不清楚，我是后来才认识伟伟的。', lie:false},
+    T4:{say:'苏念的妹妹就是芯芯。她可能……还活着。', lie:false},
+    T5:{say:'我不确定。但能进那间反锁书房的，一定另有钥匙。', lie:false}
+  },
+  xinxin:{
+    T1:{say:'我整晚都待在自己房间，没有出去过。', lie:true, exposeBy:'c_monitor', truth:'……20:20，我确实去了书房。我去找了苏念。'},
+    T2:{say:'我和苏念不熟，只是她请来的客人。', lie:true, exposeBy:'c_photo', truth:'她是我亲姐姐。我……就是芯芯。'},
+    T3:{say:'三年前的事？我不知道，与我无关。', lie:true, exposeBy:'c_revenge', truth:'三年前伟伟放火烧了我，我毁容、假死、隐姓埋名。今晚，我是来复仇的。'},
+    T4:{say:'芯芯？她三年前就死了吧。', lie:true, exposeBy:'c_ointment', truth:'我就是芯芯。我手上的疤，就是那场火的。'},
+    T5:{say:'你们五个，谁都脱不了干系。', lie:false}
+  },
+  shenmo:{
+    T1:{say:'我在房间整理卷宗，没留意时间。', lie:false},
+    T2:{say:'苏念雇我来查你们的底细。', lie:false},
+    T3:{say:'三年前那场火，我按程序鉴定为意外，没有任何问题。', lie:true, exposeBy:'c_notes', truth:'……我收了伟伟的钱，把纵火写成了意外，帮他骗保。'},
+    T4:{say:'如果芯芯没死，那苏念的死，就都说得通了。', lie:false},
+    T5:{say:'顾钊知道的最多，他最可疑。', lie:false}
+  },
+  guzhao:{
+    T1:{say:'我整晚在大厅巡逻，没发现异常。', lie:false},
+    T2:{say:'我是来查苏念命案的，公事公办。', lie:false},
+    T3:{say:'三年前的纵火案早就结案了，就是意外。', lie:true, exposeBy:'c_recording', truth:'……我收了贿赂，把三年前的案子压了下去。'},
+    T4:{say:'白月光芯芯，三年前就该死了。', lie:false},
+    T5:{say:'沈墨这种私家侦探，最会伪造证据。', lie:false}
+  }
+};
+
+const SCENES = [
+  {id:'s1', name:'书房', desc:'案发现场 · 密室', clues:[
+    {id:'c_body', t:'死者苏念，心口一刀，被摆成祈祷姿势，口中塞满信纸残页', l:'L1', short:'尸体状态'},
+    {id:'c_locked', t:'房门从内反锁，钥匙在死者右手掌心', l:'L1', short:'反锁房门'},
+    {id:'c_files', t:'书桌抽屉有一叠「复仇档案」目录，但具体文件被拿走', l:'L2', short:'复仇档案目录'},
+    {id:'c_fishline', t:'门底缝残留鱼线纤维；地毯下藏强力磁铁；垃圾桶有钓线残段', l:'L3', short:'鱼线与磁铁'},
+    {id:'c_scrap', t:'信纸残页拼出「芯」字与半句「……你还活着」', l:'L3', short:'信纸残页'}]},
+  {id:'s2', name:'苏念的卧室', desc:'复仇档案', clues:[
+    {id:'c_invites', t:'床头柜有六封未寄出的邀请函，对应六名玩家', l:'L1', short:'六封邀请函'},
+    {id:'c_safe', t:'保险箱被撬开（空）——苏念的旧案证据本应在，却不见了', l:'L2', short:'被撬的保险箱'},
+    {id:'c_photo', t:'一张泛黄合照：苏念与妹妹（芯芯）幼年合影', l:'L2', short:'姐妹合照'},
+    {id:'c_letter', t:'「第七封信」未寄出的草稿：写给死去的妹妹的忏悔书', l:'L3', short:'第七封信', key:'letter'},
+    {id:'c_notes', t:'调查笔记：伟伟纵火、恩恩助燃、沈墨伪证、顾钊受贿的证据链', l:'L3', short:'调查笔记'}]},
+  {id:'s3', name:'大厅与监控', desc:'公共区域', clues:[
+    {id:'c_register', t:'访客登记簿：六人 18:00 前后签到', l:'L1', short:'访客登记簿'},
+    {id:'c_monitor', t:'监控录像：20:20 一名戴面纱的女子走向书房方向', l:'L2', short:'监控录像'},
+    {id:'c_power', t:'停电记录：20:00 整栋断电，备用电源 20:10 启动', l:'L2', short:'停电记录'},
+    {id:'c_blind', t:'监控死角示意图：书房到后楼梯一段无监控', l:'L3', short:'监控死角'}]},
+  {id:'s4', name:'伟伟的房间', desc:'旧案手稿', clues:[
+    {id:'c_manuscript', t:'剧本手稿《第七封信》打印稿，署名「伟伟」', l:'L1', short:'署名手稿'},
+    {id:'c_badge', t:'一枚被烧焦的旧工作证残片（芯芯的）', l:'L2', short:'烧焦工作证'},
+    {id:'c_sms', t:'手机短信：「钱我会给你，别毁了我」', l:'L2', short:'勒索短信'},
+    {id:'c_recording', t:'一段录音：伟伟与顾钊密谈「三年前的案子没人会翻案」', l:'L3', short:'密谈录音'}]},
+  {id:'s5', name:'恩恩的房间', desc:'病娇日记', clues:[
+    {id:'c_diary', t:'病娇日记，字迹扭曲，写满对伟伟的占有欲', l:'L1', short:'病娇日记'},
+    {id:'c_photo2', t:'一张地下室照片：伟伟被锁住的画面 + 时间戳', l:'L2', short:'地下室照片'},
+    {id:'c_anesthetic', t:'一小瓶麻醉剂与注射器', l:'L2', short:'麻醉剂'},
+    {id:'c_diary2', t:'日记最后一页：「姐姐（芯芯）回来了，她要抢走他，我该怎么办」', l:'L3', short:'日记末页'}]},
+  {id:'s6', name:'白蔷薇的房间', desc:'假死证据', clues:[
+    {id:'c_rose', t:'桌上摆着一束白玫瑰', l:'L1', short:'白玫瑰'},
+    {id:'c_ointment', t:'一盒烧伤修复药膏与医用手套、面纱', l:'L2', short:'烧伤药膏'},
+    {id:'c_gloves', t:'她的手始终戴着手套——柜子里有大量同款手套', l:'L2', short:'大量手套'},
+    {id:'c_revenge', t:'一本复仇计划笔记：列出五名「目标」与偿还方式', l:'L3', short:'复仇笔记', key:'note'},
+    {id:'c_sparekey', t:'藏着的备用钥匙（与书房锁匹配的复制钥匙）', l:'L3', short:'备用钥匙'}]},
+  {id:'s7', name:'晨晨的房间', desc:'干净的人', clues:[
+    {id:'c_diary3', t:'晨晨的日记：发现伟伟脚踏多船、与恩恩关系异常', l:'L1', short:'晨晨日记'},
+    {id:'c_hairpin', t:'一枚掉落在书房外的发卡（晨晨的）', l:'L2', short:'掉落的发卡'},
+    {id:'c_charm', t:'一包护身符与安眠药（晨晨长期失眠）', l:'L2', short:'护身符'},
+    {id:'c_note', t:'苏念写给晨晨的纸条：「你是唯一干净的人，作证救我妹妹」', l:'L3', short:'苏念的纸条'}]},
+  {id:'s8', name:'地下室', desc:'囚禁室 · 旧址', clues:[
+    {id:'c_chains', t:'铁链、食物残渣、生活痕迹（曾囚禁过人的证据）', l:'L1', short:'囚禁痕迹'},
+    {id:'c_wall', t:'墙上刻满「伟伟」与「恩恩」的名字', l:'L2', short:'墙上的名字'},
+    {id:'c_clothes', t:'一套被撕烂的衣服（伟伟的尺寸）', l:'L2', short:'撕烂的衣服'},
+    {id:'c_sign', t:'一块老旧门牌：「芯芯工作室」——三年前案发地旧址', l:'L3', short:'旧门牌'}]}
+];
+
+const TIMELINE = [
+  {t:'18:00', ev:'六人陆续抵达泣雨山庄，苏念接待，宣布「明早谈正事」', hide:false},
+  {t:'19:00', ev:'晚餐，众人各怀心事，气氛诡异', hide:false},
+  {t:'19:30', ev:'各自回房；苏念进书房整理复仇档案', hide:false},
+  {t:'20:00', ev:'预告过的停电，山庄陷入黑暗约10分钟', hide:false},
+  {t:'20:10', ev:'电力恢复', hide:false},
+  {t:'20:20', ev:'戴面纱的女子前往书房，被苏念认出是「已死」的妹妹', hide:true},
+  {t:'20:45', ev:'姐妹激烈争吵（有人隐约听到女声争吵）', hide:true},
+  {t:'21:00', ev:'凶手用备用钥匙进入书房，刺死苏念，布置密室与死状', hide:true},
+  {t:'21:15', ev:'凶手离开书房，返回房间处理血衣', hide:true},
+  {t:'21:30', ev:'沈墨听到「重物倒地声」（实为暴风刮倒走廊花瓶）', hide:false},
+  {t:'22:00', ev:'顾钊发现书房紧锁、有血腥味，破门', hide:false},
+  {t:'22:05', ev:'众人发现苏念死亡；手机无信号、道路被暴雨冲毁', hide:false},
+  {t:'22:10', ev:'顾钊主持封锁现场，调查开始', hide:false}
+];
+
+const ENDINGS = [
+  {id:'e1', title:'白月光的陨落', type:'BE · 真凶逃脱', badge:'BE',
+   text:'你投错了人。白蔷薇在雨夜中悄然离去，此后数月，山庄众人一个接一个「失踪」，警方只在后山找到一束枯萎的白玫瑰。',
+   trigger:'触发：投票未指向白蔷薇（或弃权）。'},
+  {id:'e2', title:'第七封信', type:'HE · 真相大白', badge:'HE',
+   text:'你指向了白蔷薇。她摘下帽子，露出三年前那场大火留下的伤疤，平静认罪：「苏念到最后都在求我自首。」原来她就是死去的白月光芯芯，也是苏念的亲妹妹。',
+   trigger:'触发：投票指向「白蔷薇」。'},
+  {id:'e3', title:'一丘之貉', type:'全员定罪', badge:'ALL',
+   text:'你投了「五人都有罪」。五名背负旧罪的人全部入狱，晨晨无罪释放。但芯芯杀姐的真相被掩埋——白月光究竟是死是活，成了山庄里永远解不开的谜。',
+   trigger:'触发：投票选中特殊项「五人都有罪」。'},
+  {id:'e4', title:'救赎', type:'隐藏 · 晨晨线', badge:'HIDE',
+   text:'你以晨晨的身份，集齐了苏念的第七封信与白蔷薇的复仇笔记，选择感化而非指认。白蔷薇终于卸下伪装，放声痛哭，主动自首。暴雨停歇，天边第一次透出月光。',
+   trigger:'触发：你是晨晨 + 集齐「第七封信」与「复仇笔记」+ 勾选感化。'}
+];
+
+/* ==================== 状态 ==================== */
+const state = {
+  playerId:null, round:1, searchesUsed:0, maxSearches:3,
+  clues:new Set(), clueById:{}, asked:{}, confrontations:new Set(), truthUnlocked:false,
+  vote:null, redeem:false,
+  timerSeconds:3600, timerRunning:false, timerInt:null
+};
+
+const $ = id => document.getElementById(id);
+const me = () => ALL.find(c=>c.id===state.playerId);
+const clueById = id => { if(!state.clueById[id]){ SCENES.forEach(s=>s.clues.forEach(c=>{ if(c.id===id) state.clueById[id]=c; })); } return state.clueById[id]; };
+
+/* ==================== 开场 ==================== */
+function initRain(){
+  const rain=$('rain');
+  for(let i=0;i<90;i++){
+    const d=document.createElement('div'); d.className='drop';
+    d.style.left=Math.random()*100+'%'; d.style.height=(8+Math.random()*16)+'px';
+    d.style.animationDuration=(0.5+Math.random()*0.9)+'s'; d.style.animationDelay=(Math.random()*2)+'s';
+    d.style.opacity=0.3+Math.random()*0.5; rain.appendChild(d);
+  }
+}
+initRain();
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
+
+/* ==================== 抽身份 ==================== */
+function startDraw(){
+  show('draw');
+  $('drawStage').style.display='block'; $('scriptPanel').style.display='none';
+  $('drawHint').textContent='正在洗牌，命运由抽签决定……'; $('drawHint').style.display='block';
+  $('drawHint2').style.display='none';
+  const card=$('drawCard'); card.className='draw-card cycling';
+  const pool = ALL.filter(c=>c.canAssign);
+  let i=0;
+  const cyc=setInterval(()=>{
+    const tmp=pool[i%pool.length]; i++;
+    card.innerHTML=`<div class="mono" style="border:2px solid ${tmp.c}">${tmp.name[0]}</div>`;
+  },120);
+  setTimeout(()=>{
+    clearInterval(cyc);
+    // 随机分配，永不含凶手
+    const pick = pool[Math.floor(Math.random()*pool.length)];
+    state.playerId=pick.id;
+    card.className='draw-card';
+    card.innerHTML=`<div class="mono" style="border:2px solid ${pick.c}">${pick.name[0]}</div>
+      <div style="position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:18px;font-weight:700;color:#fff">${pick.name}</div>`;
+    $('drawHint').style.display='none';
+    $('drawHint2').style.display='block';
+    renderScript();
+  },2600);
+}
+
+function renderScript(){
+  const c=me(); if(!c) return;
+  $('scriptPanel').style.display='block';
+  $('scriptPanel').innerHTML=`
+    <div class="who-line">
+      <div class="mono" style="background:rgba(0,0,0,.35);border:2px solid ${c.c}">${c.name[0]}</div>
+      <div><h2>${c.name} <span style="font-size:14px;color:${c.c}">${c.gender} · ${c.age}岁</span></h2><div class="role">${c.role}</div></div>
+    </div>
+    <h4>公开身份</h4><p>${c.public}</p>
+    <div class="secret-box"><h4>你的秘密（只有你知道）</h4><p class="warn">${c.secret}</p>
+    <h4>你的动机</h4><p>${c.motive}</p>
+    <h4>你的任务</h4><p>${c.task}</p>
+    <h4>DM 提示</h4><p>${c.tip}</p></div>
+    <p style="margin-top:16px;color:var(--muted)">—— 牢记：凶手不会是你。你要做的，是找出今晚真正动手的那个人。</p>
+    <div style="margin-top:18px;text-align:center"><button class="btn" onclick="enterGame()">我已读完剧本，进入大厅</button></div>`;
+}
+
+function enterGame(){
+  show('game'); switchTab('chars');
+}
+
+/* ==================== 导航 ==================== */
+function switchTab(tab){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.style.display='none');
+  $('tab-'+tab).style.display='block';
+  if(tab==='chars') renderChars();
+  if(tab==='search') renderSearch();
+  if(tab==='interro') renderInterro();
+  if(tab==='timeline') renderTimeline();
+  if(tab==='vote') renderVote();
+  if(tab==='ending') renderEndings();
+}
+
+/* ==================== 人物 ==================== */
+function renderChars(){
+  $('mePill').innerHTML = `<span class="mono" style="background:rgba(0,0,0,.35);border:2px solid ${me().c}">${me().name[0]}</span><span>我是</span><b>${me().name}</b>`;
+  const grid=$('charsGrid'); grid.innerHTML='';
+  ALL.forEach(c=>{
+    const isSelf = c.id===state.playerId;
+    const card=document.createElement('div');
+    card.className='char-card'+(isSelf?' self':'');
+    card.style.setProperty('--c',c.c);
+    card.innerHTML=`
+      <div class="head">
+        <div class="mono" style="border-color:${c.c}">${c.name[0]}</div>
+        <div class="who"><div class="nm">${c.name}</div><div class="role">${c.role}</div></div>
+        <div class="gender" style="color:${c.c};border-color:${c.c}">${c.gender} ${c.age}岁</div>
+      </div>
+      <div class="body"><span class="claim">${c.selfIntro}</span><br><br>${c.public}</div>
+      <div class="foot">${isSelf?'<span class="secret-hint">【这是你】可查看完整秘密</span><span style="color:var(--gold)">翻开 ›</span>':'<span class="secret-hint">秘密：？？？</span><span>需审讯挖取</span>'}</div>`;
+    if(isSelf) card.onclick=()=>openSelfModal();
+    grid.appendChild(card);
+  });
+}
+
+function openSelfModal(){
+  const c=me();
+  $('modalBody').innerHTML=`
+    <h2 style="font-size:20px;margin-bottom:4px">${c.name} · 你的完整剧本</h2>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:14px">${c.role} · ${c.gender} ${c.age}岁</div>
+    <h4 style="color:var(--gold);font-size:13px;letter-spacing:2px;margin:14px 0 6px">公开身份</h4><p style="font-size:14px;line-height:1.8">${c.public}</p>
+    <h4 style="color:var(--gold);font-size:13px;letter-spacing:2px;margin:14px 0 6px">你的秘密</h4><p style="font-size:14px;line-height:1.8;color:#ff7a93">${c.secret}</p>
+    <h4 style="color:var(--gold);font-size:13px;letter-spacing:2px;margin:14px 0 6px">你的动机</h4><p style="font-size:14px;line-height:1.8">${c.motive}</p>
+    <h4 style="color:var(--gold);font-size:13px;letter-spacing:2px;margin:14px 0 6px">你的任务</h4><p style="font-size:14px;line-height:1.8">${c.task}</p>
+    <h4 style="color:var(--gold);font-size:13px;letter-spacing:2px;margin:14px 0 6px">DM 提示</h4><p style="font-size:14px;line-height:1.8">${c.tip}</p>`;
+  $('modal').classList.add('open');
+}
+function closeModal(){ $('modal').classList.remove('open'); }
+
+/* ==================== 搜证 ==================== */
+function renderSearch(){
+  $('roundLabel').textContent = state.round===1?'第一轮':'第二轮';
+  $('srRound').textContent = state.round;
+  $('srLeft').textContent = state.maxSearches - state.searchesUsed;
+  $('btnNextRound').disabled = state.round!==1;
+  $('clueCount').textContent = state.clues.size;
+  const grid=$('scenesGrid'); grid.innerHTML='';
+  SCENES.forEach((s,i)=>{
+    const card=document.createElement('div'); card.className='scene-card';
+    let html='';
+    s.clues.forEach(c=>{
+      const found=state.clues.has(c.id);
+      if(c.l==='L1' || found){
+        html+=`<div class="clue revealed">${c.t} <span class="tag ${c.l}">${c.l}</span></div>`;
+      } else {
+        html+=`<div class="clue locked"><span class="tag ${c.l}">${c.l}</span> 未搜证</div>`;
+      }
+    });
+    const canSearch=state.searchesUsed<state.maxSearches;
+    const searched=s.clues.some(c=>state.clues.has(c.id));
+    card.innerHTML=`<div class="sh"><div class="idx">${i+1}</div><div><div class="nm">${s.name}</div><div class="st">${s.desc}</div></div></div>
+      <div class="clues">${html}</div>
+      <div class="foot"><button class="btn small ${searched?'ghost':''}" ${canSearch?'':'disabled'} onclick="searchScene('${s.id}')">${searched?'已搜证':'搜证（-1）'}</button></div>`;
+    grid.appendChild(card);
+  });
+  renderClueLibrary();
+}
+
+function searchScene(id){
+  if(state.searchesUsed>=state.maxSearches) return;
+  const s=SCENES.find(x=>x.id===id);
+  let found=false;
+  s.clues.forEach(c=>{
+    const ok = c.l==='L1' || (c.l==='L2' && state.round>=1) || (c.l==='L3' && state.round>=2);
+    if(ok && !state.clues.has(c.id)){ state.clues.add(c.id); state.clueById[c.id]=c; found=true; }
+  });
+  if(!found) return;
+  state.searchesUsed++;
+  renderSearch();
+}
+
+function nextRound(){ if(state.round!==1) return; state.round=2; state.searchesUsed=0; renderSearch(); }
+
+function renderClueLibrary(){
+  const el=$('clueLibrary');
+  if(state.clues.size===0){ el.innerHTML='<div class="empty">尚未搜到任何线索。</div>'; return; }
+  el.innerHTML='';
+  [...state.clues].forEach(id=>{
+    const c=clueById(id); if(!c) return;
+    const div=document.createElement('div'); div.className='clue revealed';
+    div.innerHTML=`${c.t} <span class="tag ${c.l}">${c.l}</span>`;
+    el.appendChild(div);
+  });
+}
+
+/* ==================== 审讯 ==================== */
+let curNPC=null;
+
+function renderInterro(){ renderNpcList(); renderPanel(null); renderLog(); }
+
+function renderNpcList(){
+  const list=$('npcList'); list.innerHTML='';
+  ALL.filter(c=>c.id!==state.playerId).forEach(c=>{
+    const b=document.createElement('button');
+    b.className=curNPC===c.id?'active':'';
+    const askedCount=Object.keys(state.asked[c.id]||{}).length;
+    b.innerHTML=`<span class="mono" style="border:2px solid ${c.c}">${c.name[0]}</span>${c.name}${askedCount>0?'<span class="done">✓'+askedCount+'</span>':''}`;
+    b.onclick=()=>{ curNPC=c.id; renderNpcList(); renderPanel(null); renderLog(); };
+    list.appendChild(b);
+  });
+}
+
+function renderPanel(answerHtml){
+  const panel=$('interroPanel');
+  if(!curNPC){ panel.innerHTML='<h3>审讯</h3><div class="sub">选择左侧一名角色开始盘问。</div><p style="color:var(--muted);font-size:14px;line-height:1.8">每个人都有秘密，也都会撒谎。你手上搜到的线索，就是戳穿他们的武器。</p>'; return; }
+  const c=ALL.find(x=>x.id===curNPC);
+  panel.innerHTML=`<h3>审讯 · ${c.name}</h3><div class="sub">${c.role}</div>
+    <div class="topic-row">${TOPICS.map(t=>`<button class="topic-btn ${state.asked[c.id]?.[t.id]?'asked':''}" onclick="ask('${c.id}','${t.id}')">${t.q}</button>`).join('')}</div>
+    <div id="sayArea">${answerHtml||'<p style="color:var(--muted);font-size:14px">选择一个话题开始盘问。</p>'}</div>`;
+}
+
+function ask(charId, topicId){
+  if(!state.asked[charId]) state.asked[charId]={};
+  state.asked[charId][topicId]=true;
+  const c=ALL.find(x=>x.id===charId);
+  const tm=TESTIMONY[charId][topicId];
+  const exposed=state.confrontations.has(charId+':'+topicId);
+  let html=`<div class="say-box ${exposed?'truth':''}"><div class="spk">${exposed?'已戳穿的真相':c.name+' 说'}</div><p>${exposed?tm.truth:tm.say}</p></div>`;
+  if(tm.lie && !exposed && tm.exposeBy && state.clues.has(tm.exposeBy)){
+    const clue=clueById(tm.exposeBy);
+    html+=`<div class="confront"><p>你手上握着能戳穿这段谎言的关键线索——</p>
+      <button class="btn small gold" onclick="confront('${charId}','${topicId}')">出示证据：「${clue.short}」</button></div>`;
+  } else if(tm.lie && !exposed){
+    html+=`<div style="color:var(--muted);font-size:12px;margin-bottom:10px">（对方似乎有所隐瞒，但你没有能戳穿它的证据。）</div>`;
+  }
+  renderPanel(html); renderNpcList(); renderLog();
+}
+
+function confront(charId, topicId){
+  state.confrontations.add(charId+':'+topicId);
+  if(charId==='xinxin') state.truthUnlocked=true;
+  const c=ALL.find(x=>x.id===charId);
+  const tm=TESTIMONY[charId][topicId];
+  const html=`<div class="say-box truth"><div class="spk">真相 · ${c.name} 崩溃了</div><p>${tm.truth}</p></div>
+    <div class="truth-frag">✓ 真相片段已记录：${c.name} 的谎言被戳穿。</div>`;
+  renderPanel(html); renderNpcList(); renderLog();
+}
+
+function renderLog(){
+  const el=$('logPanel'); el.innerHTML='';
+  const others=ALL.filter(c=>c.id!==state.playerId);
+  let any=false;
+  others.forEach(c=>{
+    const asked=state.asked[c.id]||{};
+    Object.keys(asked).forEach(tid=>{
+      const tm=TESTIMONY[c.id][tid];
+      if(!tm) return;
+      const exposed=state.confrontations.has(c.id+':'+tid);
+      any=true;
+      const div=document.createElement('div');
+      div.className='clue'+(exposed?' revealed':'');
+      div.innerHTML=`<b style="color:${c.c}">${c.name}</b> · ${TOPICS.find(t=>t.id===tid).q}：${exposed?'<span style="color:var(--green)">【真相】'+tm.truth+'</span>':tm.say}`;
+      el.appendChild(div);
+    });
+  });
+  if(!any) el.innerHTML='<div class="empty">尚未取得任何证词。</div>';
+}
+
+/* ==================== 时间线 ==================== */
+function renderTimeline(){
+  const el=$('timeline'); el.innerHTML='';
+  TIMELINE.forEach(item=>{
+    const d=document.createElement('div'); d.className='tl-item'+(item.hide?' hide':'');
+    let ev=item.ev;
+    if(item.hide && !state.truthUnlocked){ ev=`<span class="blur">${item.ev}</span>`; }
+    else if(item.hide){ ev=`<span class="unlocked">${item.ev}</span>`; }
+    d.innerHTML=`<div class="tt">${item.t}</div><div class="ev">${ev}</div>`;
+    el.appendChild(d);
+  });
+}
+
+/* ==================== 投票 ==================== */
+function renderVote(){
+  const grid=$('voteGrid'); grid.innerHTML='';
+  ALL.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='vote-opt'+(state.vote===c.id?' selected':'');
+    d.innerHTML=`<div class="mono-sm" style="border-color:${c.c};color:${c.c}">${c.name[0]}</div>${c.name}<small>${c.role}</small>`;
+    d.onclick=()=>{ state.vote=c.id; renderVote(); };
+    grid.appendChild(d);
+  });
+  [['all','五人都有罪'],['none','弃权']].forEach(([id,label])=>{
+    const d=document.createElement('div');
+    d.className='vote-opt'+(state.vote===id?' selected':'');
+    d.innerHTML=`<div class="mono-sm" style="border-color:var(--gold);color:var(--gold)">${label==='弃权'?'弃':'罪'}</div>${label}`;
+    d.onclick=()=>{ state.vote=id; renderVote(); };
+    grid.appendChild(d);
+  });
+  const hasLetter=state.clues.has('c_letter'), hasNote=state.clues.has('c_revenge');
+  const box=$('redeemBox');
+  const canRedeem = state.playerId==='chenchen' && hasLetter && hasNote;
+  box.classList.toggle('disabled', !canRedeem);
+  $('redeemChk').disabled=!canRedeem;
+  if(!canRedeem) $('redeemChk').checked=false;
+  $('voteHint').textContent=state.vote?('已选择：'+((state.vote==='all')?'五人都有罪':(state.vote==='none')?'弃权':(ALL.find(c=>c.id===state.vote)?.name||''))):'';
+}
+
+function onRedeemToggle(){ state.redeem=$('redeemChk').checked; }
+function submitVote(){ if(!state.vote){ alert('请先选择一个投票对象'); return; } switchTab('ending'); }
+function clearVote(){ state.vote=null; state.redeem=false; $('redeemChk').checked=false; renderVote(); }
+
+/* ==================== 结局 ==================== */
+function computeEnding(){
+  if(state.vote===null) return null;
+  const hasLetter=state.clues.has('c_letter'), hasNote=state.clues.has('c_revenge');
+  if(state.playerId==='chenchen' && hasLetter && hasNote && state.redeem) return 'e4';
+  if(state.vote==='all') return 'e3';
+  if(state.vote==='xinxin') return 'e2';
+  return 'e1';
+}
+
+function renderEndings(){
+  const grid=$('endingsGrid'); grid.innerHTML='';
+  const hit=computeEnding();
+  const note=$('endingNote');
+  const r=$('recapBox');
+  if(!hit){
+    note.innerHTML='<b>提示：</b>结局尚未解锁——请先到「投票」页做出你的选择。';
+    grid.innerHTML='<div style="color:var(--muted);padding:40px;text-align:center;font-size:14px;letter-spacing:2px">完成最终投票后，这里将揭晓本局结局与完整真相。</div>';
+    r.innerHTML='';
+    return;
+  }
+  note.innerHTML=`<b>本局结算：</b>已达成「${ENDINGS.find(e=>e.id===hit).title}」。下方附完整真相复盘，其余结局触发条件一并列出。`;
+  ENDINGS.forEach(e=>{
+    const d=document.createElement('div');
+    d.className='ending'+(e.id===hit?' unlocked':'');
+    d.innerHTML=`<div class="badge ${e.badge}">${e.type}</div><div class="e-title">${e.title}</div>
+      <div class="e-type">${e.id==='e1'?'结局一':e.id==='e2'?'结局二':e.id==='e3'?'结局三':'结局四（隐藏）'}</div>
+      <div class="e-text">${e.text}</div><div class="e-trigger">${e.trigger}</div>`;
+    grid.appendChild(d);
+  });
+  // 真相复盘
+  const m=me();
+  r.innerHTML=`<h3>完整真相复盘</h3>
+    <div class="r-block"><h4>死者与死因</h4><p>苏念（山庄看护人，白月光的亲姐姐），当晚 21:00–21:15 在反锁书房内被一刀刺入心口致死，死后被摆成祈祷姿势、口中塞满信纸残页。</p></div>
+    <div class="r-block"><h4>真凶</h4><p>「白蔷薇」就是三年前「已死」的白月光芯芯。她重度烧伤毁容后假死隐姓埋名，三年后回到山庄复仇。苏念认出她还活着，要带她自首——芯芯为保住复仇计划，亲手杀死了姐姐。</p></div>
+    <div class="r-block"><h4>密室手法</h4><p>芯芯用偷配的备用钥匙开门行凶，再用钓鱼线穿过钥匙圈、借助地毯下的磁铁把钥匙从门缝送回死者掌心，制造「门从内反锁、钥匙在死者手中」的密室假象。证据：门底缝鱼线纤维、地毯下磁铁、垃圾桶钓线残段。</p></div>
+    <div class="r-block"><h4>三年前的旧案</h4><p>伟伟为霸占《第七封信》并骗保，纵火烧了芯芯的工作室；恩恩出于病态的爱提供了钥匙与助燃剂；沈墨收钱把纵火鉴定为意外；顾钊受贿压案。只有晨晨与旧案无关。</p></div>
+    <div class="r-block"><h4>你的身份</h4><p>你本局扮演「${m.name}」。${m.secret}</p></div>`;
+}
+
+/* ==================== 计时器 ==================== */
+function fmt(s){ const m=Math.floor(s/60),ss=s%60; return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss; }
+function renderTimer(){ $('timer').textContent=fmt(state.timerSeconds); $('timer').classList.toggle('danger',state.timerSeconds<=300); }
+function toggleTimer(){
+  if(state.timerRunning){ state.timerRunning=false; clearInterval(state.timerInt); $('btnTimer').textContent='继续计时'; }
+  else{ state.timerRunning=true; $('btnTimer').textContent='暂停'; state.timerInt=setInterval(tick,1000); }
+}
+function tick(){
+  if(state.timerSeconds<=0){ state.timerRunning=false; clearInterval(state.timerInt); $('btnTimer').textContent='开始计时'; alert('时间到！请进入投票。'); switchTab('vote'); return; }
+  state.timerSeconds--; renderTimer();
+}
+function resetTimer(){ state.timerSeconds=3600; state.timerRunning=false; clearInterval(state.timerInt); $('btnTimer').textContent='开始计时'; renderTimer(); }
+
+renderTimer();
+</script>
+</body>
+</html>
